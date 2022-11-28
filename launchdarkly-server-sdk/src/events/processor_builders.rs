@@ -82,7 +82,7 @@ impl EventProcessorFactory for EventProcessorBuilder {
             BuildError::InvalidConfig(format!("couldn't parse events_base_url: {}", e))
         })?;
 
-        let mut builder = reqwest::Client::builder();
+        let mut builder = reqwest::blocking::Client::builder();
 
         if let Some(tags) = tags {
             let mut headers = reqwest::header::HeaderMap::new();

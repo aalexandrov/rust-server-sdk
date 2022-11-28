@@ -22,14 +22,14 @@ pub trait FeatureRequester: Send {
 }
 
 pub struct ReqwestFeatureRequester {
-    http: r::Client,
+    http: r::blocking::Client,
     url: r::Url,
     sdk_key: String,
     cache: Option<CachedEntry>,
 }
 
 impl ReqwestFeatureRequester {
-    pub fn new(http: r::Client, url: r::Url, sdk_key: String) -> Self {
+    pub fn new(http: r::blocking::Client, url: r::Url, sdk_key: String) -> Self {
         Self {
             http,
             url,
@@ -54,7 +54,7 @@ impl FeatureRequester for ReqwestFeatureRequester {
 
         let resp = request_builder.send();
 
-        let mut response = match resp {
+        let response = match resp {
             Ok(response) => response,
             Err(e) => {
                 error!(
@@ -185,7 +185,7 @@ mod tests {
     }
 
     fn build_feature_requester() -> ReqwestFeatureRequester {
-        let http = r::Client::builder()
+        let http = r::blocking::Client::builder()
             .build()
             .expect("Failed building the client");
         let url = reqwest::Url::parse(&mockito::server_url())

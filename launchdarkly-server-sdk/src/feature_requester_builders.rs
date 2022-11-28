@@ -42,7 +42,7 @@ impl FeatureRequesterFactory for ReqwestFeatureRequesterBuilder {
         let url = r::Url::parse(&url)
             .map_err(|_| BuildError::InvalidConfig("Invalid base url provided".into()))?;
 
-        let mut builder = r::Client::builder();
+        let mut builder = r::blocking::Client::builder();
 
         if let Some(tags) = tags {
             let mut headers = r::header::HeaderMap::new();
