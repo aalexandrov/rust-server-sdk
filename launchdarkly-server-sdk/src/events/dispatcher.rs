@@ -1,7 +1,6 @@
 use crossbeam_channel::{bounded, select, tick, Receiver, Sender};
 use std::collections::HashSet;
 use std::iter::FromIterator;
-use std::num::NonZeroUsize;
 use std::time::SystemTime;
 use threadpool::ThreadPool;
 
@@ -82,12 +81,10 @@ pub(super) struct EventDispatcher {
 
 impl EventDispatcher {
     pub(super) fn new(events_configuration: EventsConfiguration) -> Self {
-        let user_keys_capacity = NonZeroUsize::new(events_configuration.user_keys_capacity)
-            .expect("user_keys_capacity > 0");
         Self {
             flush_pool: ThreadPool::new(5),
             outbox: Outbox::new(events_configuration.capacity),
-            user_keys: LruCache::<String, ()>::new(user_keys_capacity),
+            user_keys: LruCache::<String, ()>::new(events_configuration.user_keys_capacity),
             events_configuration,
             last_known_time: 0,
             disabled: false,

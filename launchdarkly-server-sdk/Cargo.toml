@@ -13,17 +13,17 @@ exclude = [
 ]
 
 [dependencies]
-chrono = { version = "0.4.23", default-features = false, features = ["std"] }
+chrono = "0.4.19"
 crossbeam-channel = "0.5.1"
 data-encoding = "2.3.2"
-eventsource-client = { git = "https://github.com/MaterializeInc/rust-eventsource-client", default_features = false }
+eventsource-client = "0.11.0"
 futures = "0.3.12"
 lazy_static = "1.4.0"
 log = "0.4.14"
-lru = { version = "0.8.1", default_features = false }
-reqwest = { version = "0.11.13", default_features = false, features = ["blocking", "json"] }
+lru = { version = "0.7.2", default_features = false }
+reqwest = { version = "0.9.11", default_features = false, features = ["rustls-tls"] }
 ring = "0.16.20"
-launchdarkly-server-sdk-evaluation = { git = "https://github.com/MaterializeInc/rust-server-sdk-evaluation" }
+launchdarkly-server-sdk-evaluation = "= 1.0.0-beta.5"
 serde = { version = "1.0.132", features = ["derive"] }
 serde_json = { version = "1.0.73", features = ["float_roundtrip"] }
 thiserror = "1.0"
@@ -31,12 +31,12 @@ tokio = { version = "1.2.0", features = ["rt-multi-thread"] }
 threadpool = "1.8.1"
 parking_lot = "0.12.0"
 tokio-stream = { version = "0.1.8", features = ["sync"] }
-moka = { version = "0.9.6", default_features = false, features = ["sync", "atomic64"]} # do not pull quanta
+moka = "0.7.1"
 uuid = {version = "1.0.0-alpha.1", features = ["v4"] }
 
 [dev-dependencies]
 maplit = "1.0.1"
-env_logger = "0.10.0"
+env_logger = "0.9.0"
 serde_json = { version = "1.0.73", features = ["preserve_order"] } # for deterministic JSON testing
 tokio = { version = "1.2.0", features = ["macros", "time"] }
 test-case = "2.0.0"
@@ -50,8 +50,3 @@ name = "progress"
 
 [build-dependencies]
 built = "0.5.1"
-
-[features]
-default = ["rustls"]
-rustls = ["eventsource-client/rustls", "reqwest/rustls-tls"]
-hypertls = ["eventsource-client/hypertls", "reqwest/hyper-tls"]

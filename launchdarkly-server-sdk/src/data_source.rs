@@ -447,7 +447,6 @@ mod tests {
         mock_endpoint.assert();
     }
 
-    #[ignore = "this doesn't work after the upgrading reqwest to blocking::Client"]
     #[test_case(Some("application-id/abc:application-sha/xyz".into()), "application-id/abc:application-sha/xyz")]
     #[test_case(None, Matcher::Missing)]
     #[tokio::test(flavor = "multi_thread")]

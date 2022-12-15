@@ -5,7 +5,7 @@ use crate::{
 use crossbeam_channel::Sender;
 
 use chrono::DateTime;
-use r::{blocking::Response, header::HeaderValue};
+use r::{header::HeaderValue, Response};
 use reqwest as r;
 use uuid::Uuid;
 
@@ -25,11 +25,11 @@ pub trait EventSender: Send + Sync {
 pub struct ReqwestEventSender {
     url: r::Url,
     sdk_key: String,
-    http: r::blocking::Client,
+    http: r::Client,
 }
 
 impl ReqwestEventSender {
-    pub fn new(http: r::blocking::Client, url: r::Url, sdk_key: &str) -> Self {
+    pub fn new(http: r::Client, url: r::Url, sdk_key: &str) -> Self {
         Self {
             http,
             url,
@@ -250,7 +250,7 @@ mod tests {
     }
 
     fn build_event_sender() -> ReqwestEventSender {
-        let http = r::blocking::Client::builder()
+        let http = r::Client::builder()
             .build()
             .expect("Failed building the client");
         let url = format!("{}/bulk", &mockito::server_url());

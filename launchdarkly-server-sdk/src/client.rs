@@ -758,7 +758,6 @@ mod tests {
     use crossbeam_channel::Receiver;
     use launchdarkly_server_sdk_evaluation::{Reason, User};
     use std::collections::HashMap;
-    use tokio::task::spawn_blocking;
 
     use tokio::time::Instant;
 
@@ -785,14 +784,11 @@ mod tests {
 
     #[tokio::test]
     async fn client_asynchronously_initializes() {
-        let (client, _event_rx) = spawn_blocking(|| make_mocked_client_with_delay(1000, false))
-            .await
-            .expect("mocked client");
+        let (client, _event_rx) = make_mocked_client_with_delay(1000, false);
         client.start_with_default_executor();
 
         let now = Instant::now();
         let initialized = client.initialized_async().await;
-
         let elapsed_time = now.elapsed();
         assert!(initialized);
         // Give ourself a good margin for thread scheduling.
@@ -801,9 +797,7 @@ mod tests {
 
     #[tokio::test]
     async fn client_initializes_immediately_in_offline_mode() {
-        let (client, _event_rx) = spawn_blocking(|| make_mocked_client_with_delay(1000, true))
-            .await
-            .expect("mocked client");
+        let (client, _event_rx) = make_mocked_client_with_delay(1000, true);
         client.start_with_default_executor();
 
         assert!(client.initialized());
@@ -1237,9 +1231,7 @@ mod tests {
 
     #[tokio::test]
     async fn variation_detail_handles_client_not_ready() {
-        let (client, event_rx) = spawn_blocking(|| make_mocked_client_with_delay(u64::MAX, false))
-            .await
-            .expect("mocked client");
+        let (client, event_rx) = make_mocked_client_with_delay(u64::MAX, false);
         client.start_with_default_executor();
         let user = User::with_key("bob").build();
 
