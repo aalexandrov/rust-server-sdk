@@ -18,7 +18,7 @@ use super::processor::{
     EventProcessor, EventProcessorError, EventProcessorImpl, NullEventProcessor,
 };
 use super::sender::EventSender;
-use super::EventsConfiguration;
+use super::{EventsConfiguration, OnEventSenderResultSuccess};
 
 const DEFAULT_FLUSH_POLL_INTERVAL: Duration = Duration::from_secs(5);
 const DEFAULT_EVENT_CAPACITY: usize = 500;
@@ -79,6 +79,7 @@ pub struct EventProcessorBuilder {
     all_attributes_private: bool,
     private_attributes: HashSet<Reference>,
     // diagnostic_recording_interval: Duration
+    on_success: OnEventSenderResultSuccess,
 }
 
 impl EventProcessorFactory for EventProcessorBuilder {
@@ -127,6 +128,7 @@ impl EventProcessorFactory for EventProcessorBuilder {
             context_keys_flush_interval: self.context_keys_flush_interval,
             all_attributes_private: self.all_attributes_private,
             private_attributes: self.private_attributes.clone(),
+            on_success: self.on_success.clone(),
         };
 
         let events_processor =
@@ -152,6 +154,7 @@ impl EventProcessorBuilder {
             event_sender: None,
             all_attributes_private: false,
             private_attributes: HashSet::new(),
+            on_success: Arc::new(|_| ()),
         }
     }
 
@@ -211,6 +214,12 @@ impl EventProcessorBuilder {
         R: Into<Reference>,
     {
         self.private_attributes = attributes.into_iter().map(|a| a.into()).collect();
+        self
+    }
+
+    /// Set a callback method to be called when handling an `EventSenderResult` with `success = true`.
+    pub fn on_success(&mut self, on_success: OnEventSenderResultSuccess) -> &mut Self {
+        self.on_success = on_success;
         self
     }
 

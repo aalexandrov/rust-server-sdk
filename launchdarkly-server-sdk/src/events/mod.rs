@@ -4,13 +4,15 @@ use std::num::NonZeroUsize;
 use std::sync::Arc;
 use std::time::Duration;
 
-use self::sender::EventSender;
+use self::sender::{EventSender, EventSenderResult};
 
 pub mod dispatcher;
 pub mod event;
 pub mod processor;
 pub mod processor_builders;
 pub mod sender;
+
+pub type OnEventSenderResultSuccess = Arc<dyn Fn(&EventSenderResult) + Send + Sync>;
 
 pub struct EventsConfiguration {
     capacity: usize,
@@ -20,6 +22,7 @@ pub struct EventsConfiguration {
     context_keys_flush_interval: Duration,
     all_attributes_private: bool,
     private_attributes: HashSet<Reference>,
+    on_success: OnEventSenderResultSuccess,
 }
 
 #[cfg(test)]
@@ -35,6 +38,7 @@ fn create_events_configuration(
         context_keys_flush_interval: Duration::from_secs(100),
         all_attributes_private: false,
         private_attributes: HashSet::new(),
+        on_success: Arc::new(|_| ()),
     }
 }
 
