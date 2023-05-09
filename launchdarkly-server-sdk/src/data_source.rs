@@ -52,6 +52,8 @@ pub(crate) struct DeleteData {
     version: u64,
 }
 
+pub type EventReceived = Arc<dyn Fn(&es::SSE) + Send + Sync>;
+
 /// Trait for the component that obtains feature flag data in some way and passes it to a data
 /// store. The built-in implementations of this are the client's standard streaming or polling
 /// behavior.
@@ -60,6 +62,7 @@ pub trait DataSource: Send + Sync {
         &self,
         data_store: Arc<RwLock<dyn DataStore>>,
         init_complete: Arc<dyn Fn(bool) + Send + Sync>,
+        event_received: EventReceived,
         shutdown_receiver: broadcast::Receiver<()>,
     );
 }
@@ -131,6 +134,7 @@ impl DataSource for StreamingDataSource {
         &self,
         data_store: Arc<RwLock<dyn DataStore>>,
         init_complete: Arc<dyn Fn(bool) + Send + Sync>,
+        event_received: EventReceived,
         shutdown_receiver: broadcast::Receiver<()>,
     ) {
         let mut event_stream = self.es_client.stream().fuse();
@@ -146,12 +150,15 @@ impl DataSource for StreamingDataSource {
                     _ = shutdown_future => break,
                     event = event_stream.next() => {
                         let event = match event {
-                            Some(Ok(event)) => match event {
-                                es::SSE::Comment(str)=> {
-                                    debug!("data source got a comment: {}", str);
-                                    continue;
-                                },
-                                es::SSE::Event(ev) => ev,
+                            Some(Ok(event)) => {
+                                event_received(&event);
+                                match event {
+                                    es::SSE::Comment(str)=> {
+                                        debug!("data source got a comment: {}", str);
+                                        continue;
+                                    },
+                                    es::SSE::Event(ev) => ev,
+                                }
                             },
                             Some(Err(es::Error::UnexpectedResponse(status_code))) => {
                                 match is_http_error_recoverable(status_code.as_u16()) {
@@ -231,6 +238,7 @@ impl DataSource for PollingDataSource {
         &self,
         data_store: Arc<RwLock<dyn DataStore>>,
         init_complete: Arc<dyn Fn(bool) + Send + Sync>,
+        _event_received: EventReceived,
         shutdown_receiver: broadcast::Receiver<()>,
     ) {
         let mut feature_requester = match self.feature_requester_factory.lock() {
@@ -295,6 +303,7 @@ impl DataSource for NullDataSource {
         &self,
         _datastore: Arc<RwLock<dyn DataStore>>,
         _init_complete: Arc<dyn Fn(bool) + Send + Sync>,
+        _event_received: EventReceived,
         _shutdown_receiver: broadcast::Receiver<()>,
     ) {
     }
@@ -318,6 +327,7 @@ impl DataSource for MockDataSource {
         &self,
         _datastore: Arc<RwLock<dyn DataStore>>,
         init_complete: Arc<dyn Fn(bool) + Send + Sync>,
+        _event_received: EventReceived,
         _shutdown_receiver: broadcast::Receiver<()>,
     ) {
         let delay_init = self.delay_init;
@@ -430,6 +440,7 @@ mod tests {
         streaming.subscribe(
             data_store,
             Arc::new(move |success| init_state.store(success, Ordering::SeqCst)),
+            Arc::new(move |_ev| {}),
             shutdown_tx.subscribe(),
         );
 
@@ -483,6 +494,7 @@ mod tests {
         polling.subscribe(
             data_store,
             Arc::new(move |success| init_state.store(success, Ordering::SeqCst)),
+            Arc::new(move |_ev| {}),
             shutdown_tx.subscribe(),
         );
 
