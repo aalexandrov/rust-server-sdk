@@ -90,7 +90,7 @@ impl StreamingDataSource {
                     .build(),
             )
             .connect_timeout(Duration::from_secs(10))
-            .read_timeout(Duration::from_secs(300)) // LaunchDarkly sends keepalives every 3m
+            .read_timeout(Duration::from_secs(10)) // LaunchDarkly sends keepalives every 3m
             .header("Authorization", sdk_key)?
             .header("User-Agent", &crate::USER_AGENT)?;
 
@@ -151,6 +151,7 @@ impl DataSource for StreamingDataSource {
                 futures::select! {
                     _ = shutdown_future => break,
                     event = event_stream.next() => {
+                        info!("got event: {:?}", event);
                         let event = match event {
                             Some(Ok(event)) => {
                                 event_received(&event);
@@ -176,11 +177,15 @@ impl DataSource for StreamingDataSource {
                                 error!("error on event stream: {:?}", e);
 
                                 match e {
-                                    es::Error::Eof => {
+                                    es::Error::Eof
+                                    | es::Error::TimedOut
+                                    | es::Error::UnexpectedEof
+                                    | es::Error::UnexpectedResponse(_)
+                                    | es::Error::HttpStream(_) => {
                                         continue;
                                     }
                                     _ => {
-                                        debug!("unhandled error; break");
+                                        error!("unhandled error; break");
                                         break;
                                     }
                                 }
