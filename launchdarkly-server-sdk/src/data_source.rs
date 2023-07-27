@@ -90,7 +90,7 @@ impl StreamingDataSource {
                     .build(),
             )
             .connect_timeout(Duration::from_secs(10))
-            .read_timeout(Duration::from_secs(300)) // LaunchDarkly sends keepalives every 3m
+            .read_timeout(Duration::from_secs(90)) // 90 seconds to test this (LaunchDarkly sends keepalives every 3m)
             .header("Authorization", sdk_key)?
             .header("User-Agent", &crate::USER_AGENT)?;
 
