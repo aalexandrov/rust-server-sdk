@@ -173,7 +173,7 @@ impl DataSource for StreamingDataSource {
                                 }
                             },
                             Some(Err(e)) => {
-                                error!("error on event stream: {:?}; assuming event stream will reconnect", e);
+                                warn!("error on event stream: {:?}; assuming event stream will reconnect", e);
                                 continue;
                             },
                             None => {
